@@ -1,77 +1,87 @@
-# Predictive Bill Tracker Dashboard
+# Indian Parliament Bill Tracker & Analytics
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://predictivebilltracker.streamlit.app/)
+## 📖 Overview
+The **Indian Parliament Bill Tracker** is an AI-powered legislative analytics dashboard designed to monitor and predict the outcomes of bills in the **Lok Sabha** and **Rajya Sabha**.
 
-## Overview
-This project is an AI-powered legislative tracking tool submitted to the **AI4Legislation 2025** competition in the "Legislative Tracking" category. It provides a dashboard to predict the viability and passage probability of U.S. Congressional bills using machine learning models trained on data from the 118th Congress (2023-2025).
+## 🚀 Key Features
+- **Predictive AI**: Uses a dedicated Machine Learning model (Random Forest) to forecast the "Passage Probability" of any bill.
+- **Interactive Dashboard**: Enter a Bill ID to instantly view its status, sponsor, and likelihood of becoming law.
+- **Legislative Timeline**: Visualizes the journey of a bill from introduction to enactment or lapse.
+- **Comprehensive Database**: Powered by over **3,500 bills** from the Lok Sabha secretariat (2000-Present).
 
-Key Features:
-- Fetches real-time bill data from the Congress.gov API.
-- Predicts bill viability (likelihood of gaining traction) and passage probability with confidence intervals.
-- Visualizes bill timelines, sponsor details, and key metrics.
-- Time-aware models: Different predictions based on bill age (new, early-stage, progressive).
-- Built with Streamlit for an interactive UI.
+---
 
-The tool helps citizens, advocates, and policymakers track bills, understand their chances of success, and identify factors influencing outcomes. It addresses challenges in legislative transparency by simplifying complex data and providing actionable insights.
+## 🏗️ System Architecture
 
-**Competition Alignment**:
-- **Innovation**: Dual-stage prediction (viability then passage) with ensemble models and confidence ranges.
-- **Impact**: Empowers civic engagement by demystifying bill progress; could scale to real-time monitoring.
-- **Technical Excellence**: Uses NLP for bill analysis, ensemble ML for predictions, and API integration.
-- **Usability**: Intuitive dashboard with metrics, timelines, and recommendations.
-- **Ethics**: Bias mitigation in models, transparent predictions, and data privacy focus.
+### 1. Data Layer (`data/`)
+The system sources data from official records:
+*   **Source**: Integrated `Bills.xlsx` (Official Lok Sabha Data) containing **3,563 records**.
+*   **Processed Data**: `data/bills_processed.csv` holds the normalized dataset used for training, featuring columns like `ministry`, `year`, `is_money_bill`, and `status`.
+*   *(Legacy)*: Also includes a custom scraper (`src/scraper.py`) for PRS India data.
 
-For full details, see [docs/project_report.md](docs/project_report.md).
+### 2. Machine Learning Model (`src/train_model.py`)
+A custom **Random Forest Classifier** replaces static heuristic rules.
+*   **Target**: Predicts if a bill will be **Passed/Assented** (1) or **Lapsed/Withdrawn/Negatived** (0).
+*   **Features**:
+    *   **Ministry**: The sponsoring department (e.g., *Finance*, *Home Affairs*).
+    *   **Year**: Captures increased legislative activity in certain years of a term.
+    *   **Bill Type**: Inferred from title keywords (e.g., *Amendment*, *Appropriation*, *Finance*).
+*   **Performance**: The model achieves **86% Accuracy** on the test set.
 
-## Demo Video
-Watch the 7-minute demonstration: [YouTube Demonstration Video](https://www.youtube.com/watch?v=oLsZL_xDgDU&ab_channel=OliverFan)
+### 3. Application Layer (`src/app.py` & `src/data_fetch.py`)
+*   **Streamlit UI**: A responsive web interface `http://localhost:8501`.
+*   **Real-time Inference**: The app loads the trained model artifacts (`indian_bill_model.pkl`) to generate live predictions.
+*   **Dynamic Fallbacks**: If ML inference is uncertain, it employs historical heuristics.
 
-This video covers: Project motivation, technical architecture, dashboard demo, societal impact, and ideas for the future.
+---
 
-## Installation & Setup
-### Option 1
-Open the deployed Streamlit website with preloaded code and dependencies: https://predictivebilltracker.streamlit.app
+## 💻 Installation & Usage
 
-*Note: If the website is closed due to inactivity, click "Yes, get this app back up!" and wait 1-2 minutes for the necessary dependencies to be installed.*
+### Prerequisites
+- Python 3.8+
+- Required packages: `streamlit`, `pandas`, `scikit-learn`, `plotly`, `openpyxl`.
 
-### Option 2
-Or, if you would like to set up the code yourself, then you can do the following:
-1. Clone the repo: <br>git clone https://github.com/oliversoctopus/predictive-bill-tracker-dashboard</br>
-cd predictive-bill-tracker-dashboard
-2. Install dependencies (Python 3.8+ required):
-pip install -r requirements.txt  
-3. Set up environment variables (in `.env` file):
-CONGRESS_API_KEY=your_api_key_here  
-4. Run the app:
-streamlit run src/app.py
+### Setup
+1.  **Clone/Navigate** to the project directory.
+2.  **Install Dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  **Run the Dashboard**:
+    ```bash
+    streamlit run src/app.py
+    ```
 
-For data extraction and model training, see [docs/data.md](docs/data.md) and [docs/model_training.md](docs/model_training.md).
+### How to Use
+1.  Open the dashboard in your browser.
+2.  **Search**: Enter a Bill ID (e.g., `2001`, `3050`) from the dataset.
+3.  **Analyze**:
+    *   **Gauge Chart**: Shows the probability of passage (0-100%).
+    *   **Timeline**: See when the bill was introduced and passed by each House.
+    *   **Insights**: Read the AI-generated explanation for the score.
 
-## Project Structure
-- **data/**: Notebooks for data extraction and preprocessing from Congress API.
-- **models/**: Notebook for training ML models; saved models in PKL format.
-- **src/**: Core application code (Streamlit dashboard and data fetching).
-- **docs/**: Detailed documentation (report, data, models, ethics, etc.).
+---
 
-## Datasets
-- Sourced from Congress.gov API (118th Congress bills: HR, S, HJRES, SJRES).
-- Processed datasets: `bills_118th_congress_full.csv` (all bills), `bills_118th_congress_training_enhanced.csv` (with outcomes).
-- Details: See [docs/data.md](docs/data.md).
+## 📂 Project Structure
+```
+├── Bills.xlsx               # Source Data (User Provided)
+├── data/
+│   ├── bills_processed.csv  # Cleaned dataset for ML
+│   ├── indian_bills.csv     # (Legacy) Scraped dataset
+│   ├── indian_bill_model.pkl # Trained Random Forest Model
+│   └── model_columns.pkl    # Feature columns for inference
+├── src/
+│   ├── app.py               # Main Streamlit Dashboard Application
+│   ├── data_fetch.py        # Data loading and preprocessing logic
+│   ├── scraper.py           # (Utility) Web scraper for PRS India
+│   └── train_model.py       # ML Training Pipeline
+├── process_bills.py         # Script to convert Excel -> CSV
+├── requirements.txt         # Project Dependencies
+└── README.md                # Project documentation
+```
 
-## AI Models
-- Ensemble models (Random Forest, Gradient Boosting, Logistic Regression) for viability and passage prediction.
-- Trained on ~16,500 bills; handles class imbalance with calibration.
-- Saved in `models/` as PKL files (e.g., `viability_new_bill.pkl`).
-- Details: See [docs/model_training.md](docs/model_training.md).
+## 📜 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Ethical Considerations
-See [docs/ethics.md](docs/ethics.md) for bias mitigation, transparency, and societal impact.
-
-## License & Attributions
-- **License**: MIT + Commons Clause (see LICENSE file).
-- **Attributions**: Congress.gov API, scikit-learn, Streamlit, Plotly. Full list in [docs/attributions.md](docs/attributions.md).
-
-## Competition Submission
-- Category: Legislative Tracking.
-
-Questions? Contact oliver.s.fan@gmail.com
+## 🤝 Contributing
+Contributions are welcome! Please fork the repository and submit a pull request.
